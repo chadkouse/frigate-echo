@@ -86,11 +86,15 @@ begin
 
     	logger.info "#{message.internal_id} File moved to Echo storage."
 
-			# delete export in frigate
+			# delete export in frigate — the clip is already safe in Echo storage,
+			# so a failure here (API change, Frigate restarting) is logged, not fatal
 
-			frigate.delete(id)
-
-			logger.info "#{message.internal_id} Export deleted from Frigate."
+			begin
+				frigate.delete(id)
+				logger.info "#{message.internal_id} Export deleted from Frigate."
+			rescue StandardError => e
+				logger.warn "#{message.internal_id} Could not delete export #{id} from Frigate (clip already archived): #{e.message.lines.first.to_s.strip}"
+			end
 
 			# trim exports folder
 
